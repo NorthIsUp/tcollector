@@ -1,0 +1,68 @@
+#! /bin/sh
+### BEGIN INIT INFO
+# Provides:          reboot
+# Required-Start:
+# Required-Stop:
+# Default-Start:
+# Default-Stop:      6
+# Short-Description: Execute the reboot command.
+# Description:
+### END INIT INFO
+PATH=/sbin:/usr/sbin:/bin:/usr/bin
+
+# /etc/init.d/rsync: start and stop the rsync daemon
+
+DAEMON=/usr/local/tcollector/startstop
+
+DAEMON_OPTS=''
+DAEMON_DEFAULTS_FILE=/etc/default/rsync
+DAEMON_PID_FILE=/var/run/tcollector.pid
+DAEMON_NICE_PARM=''
+DAEMON_ENVARS=''
+
+test -x $DAEMON || echo "$DAEMON not found, exiting" && exit 0
+
+[ -f /lib/lsb/init-functions ] && . /lib/lsb/init-functions
+
+set -e
+
+do_start () {
+    echo "starting collector"
+    if start-stop-daemon --start --quiet --background \
+        --pidfile $DAEMON_PID_FILE --make-pidfile \
+        $DAEMON_NICE_PARM --exec $DAEMON \
+        -- $DAEMON_OPTS
+    then
+        rc=0
+        sleep 1
+        if ! kill -0 $(cat $DAEMON_PID_FILE) >/dev/null 2>&1; then
+            log_failure_msg "tcollector daemon failed to start"
+            rc=1
+        fi
+    else
+        rc=1
+    fi
+}
+
+do_stop () {
+    # Message should end with a newline since kFreeBSD may
+    # print more stuff (see #323749)
+    log_action_msg "Will now restart"
+}
+
+case "$1" in
+  start)
+    do_start
+    ;;
+  restart|reload|force-reload)
+    echo "Error: argument '$1' not supported" >&2
+    exit 3
+    ;;
+  stop)
+    do_stop
+    ;;
+  *)
+    echo "Usage: $0 start|stop" >&2
+    exit 3
+    ;;
+esac
