@@ -22,7 +22,7 @@ DAEMON_ENVARS=''
 
 export TSD_HOST=50.19.126.48
 
-test -x $DAEMON || echo "$DAEMON not found, exiting" && exit 0
+test -x $DAEMON || ( echo "$DAEMON not found, exiting" && exit 0 )
 
 [ -f /lib/lsb/init-functions ] && . /lib/lsb/init-functions
 
